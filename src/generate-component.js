@@ -4,10 +4,10 @@ function generateComponent({attributes, actions}) {
 
   const importCode = `import Component from '@ember/component';\nimport { tryInvoke } from '@ember/utils';\n`;
 
-  let documentation = `/**\n\tAttributes\n`;
-  attributes.forEach(attr => documentation += `\t${attr}\n`);
-  documentation +=`\n\tActions\n`;
-  actions.forEach(action => documentation += `\t${action}\n`);
+  let documentation = `/**\n\tATTRIBUTES\n`;
+  attributes.forEach(attr => documentation += `\t${attr}=${attr}\n`);
+  // documentation +=`\n\tActions\n`;
+  actions.forEach(action => documentation += `\t${action}=(action "${action})"\n`);
   documentation += `**/\n`;
 
   let componentCode = `export default Component.extend({\n`

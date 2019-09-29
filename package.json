@@ -1,4 +1,16 @@
 {
+  "name": "ember-partial-codemod",
+  "version": "0.1.1",
+  "description": "Codemod to help you migrate away from partials",
+  "homepage": "https://github.com/ygongdev/ember-partial-codemod",
+  "bugs": {
+    "url": "https://github.com/ygongdev/ember-partial-codemod/issues"
+  },
+  "repository": {
+    "type": "git"
+  },
+  "license": "MIT",
+  "author": "Yicheng Gong",
   "dependencies": {
     "ember-template-recast": "^3.1.3",
     "yargs": "^14.0.0"
