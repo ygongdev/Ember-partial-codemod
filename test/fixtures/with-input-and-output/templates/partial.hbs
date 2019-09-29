@@ -1,0 +1,37 @@
+  <div class={{a1}}>
+    {{#if a2}}
+      <div class="{{a3}} {{if a4 "do not include 1"}}"
+        tabindex={{a5}}
+        aria-label={{a6}}
+      >
+        <img class={{a7}}
+          id={{concat a8 "do not include 2"}}
+          src={{a9}}
+          alt="do not include 3"
+          hi={{concat a10 "do not include 4"}}
+          style={{a11}}
+          onload={{action "action"}}
+          onerror={{action (if "action1" a12)}}
+          onWhatever={{action "action2" a13}}
+          draggable={{a14}}>
+      </div>
+      {{! do not include comment}}
+      {{#unless a15}}
+        {{doNotIncludeHelper a16 a17}}
+        {{doNotIncludeComponent someAttr=a18 someAttr="do not include 5" class="do not include 6"}}
+        {{doNotIncludeComponent someAttr=(action "action3" ) someAttr="do not include 7" class="do not include 8"}}
+        {{doNotIncludeComponent someAttr=(if a19) someAttr="do not include 9" class="do not include 10"}}
+        {{doNotIncludeComponent someAttr=(concat a20 a21) someAttr="do not include 11" class="do not include 12"}}
+        {{doNotIncludeComponent someAttr=(concat a22 (if a23 a24)) someAttr="do not include 13" class="do not include 14"}}
+      {{/unless}}
+    {{else if a25}}
+      {{#unless a26}}
+        {{doNotIncludeComponent someAttr=(a27) someAttr="do not include 16" class="do not include 17"}}
+        {{doNotIncludeComponent someAttr=(if a28 a29) someAttr="do not include 18" class="do not include 19"}}
+      {{/unless}}
+    {{/if}}
+  </div>
+  {{! template-lint-disable img-alt-attributes }}
+  <img src={{a30}} class="do not include 20">
+  {{partial "do not include 21"}}
+  {{! template-lint-enable img-alt-attributes }}

@@ -1,11 +1,11 @@
 const fs = require('fs');
 
-function generateComponent({attributes, actions}, outputPath) {
+function generateComponent({attributes, actions}) {
 
   const importCode = `import Component from '@ember/component';\nimport { tryInvoke } from '@ember/utils';\n`;
 
   let documentation = `/**\n\tAttributes\n`;
-  attributes.forEach((attr, idx) => documentation += `\t${idx}. ${attr}\n`);
+  attributes.forEach(attr => documentation += `\t${attr}\n`);
   documentation +=`\n\tActions\n`;
   actions.forEach(action => documentation += `\t${action}\n`);
   documentation += `**/\n`;
@@ -15,17 +15,17 @@ function generateComponent({attributes, actions}, outputPath) {
     let actionsCode = `\tactions: {\n`;
     actions.forEach(action => {
       actionsCode +=
-        `\t\t${action}: {\n` +
+        `\t\t${action}() {\n` +
         `\t\t\ttryInvoke(this, '${action}');\n` +
         `\t\t},\n`
     })
-    actionsCode += '}\n';
+    actionsCode += '\t}\n';
     componentCode += actionsCode;
   }
   componentCode += `});\n`
 
   const content = importCode + documentation + componentCode;
-  fs.writeFileSync(outputPath, content);
+  return content;
 }
 
 module.exports = {

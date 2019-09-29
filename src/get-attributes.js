@@ -1,5 +1,8 @@
 /**
+  Reference: https://github.com/glimmerjs/glimmer-vm/blob/master/packages/%40glimmer/syntax/lib/types/nodes.ts
+
   Glimmer VM Node AST
+
   Program: Program;
   Template: Template;
   Block: Block;
@@ -26,11 +29,50 @@
 const { parse } = require("ember-template-recast");
 const { traverse, } = require('@glimmer/syntax');
 
+const EMBER_TEMPLATE_HELPERS = [
+  "action",
+  "array",
+  "component",
+  "concat",
+  "debugger",
+  "each",
+  "each-in",
+  "fn",
+  "get",
+  "hasBlock",
+  "hasBlockParams",
+  "hash",
+  "if",
+  "input",
+  "let",
+  "link-to",
+  "loc",
+  "log",
+  "mount",
+  "mut",
+  "on",
+  "outlet",
+  "partial",
+  "query-params",
+  "textarea",
+  "unbound",
+  "unless",
+  "with",
+  "yield",
+];
+
+/**
+ * Given a `source`, parse it and extract all of the `attributes` and `actions`.
+ * TODO: Make sure this logic works for all scenarios.
+ *
+ * @param {String} source
+ * @returns {Object} containing `attributes` and `actions`.
+ */
 function getAttributes(source) {
 
   const attributes = new Set();
   const ast = parse(source);
-  const excludeAttributes = new Set();
+  const excludeAttributes = new Set(EMBER_TEMPLATE_HELPERS);
   const actions = new Set();
 
   traverse(ast, {
@@ -80,7 +122,7 @@ function getAttributes(source) {
 
   return {
     attributes: [...attributes].filter(attr => !excludeAttributes.has(attr)),
-    actions,
+    actions: [...actions],
   }
 }
 
