@@ -15,5 +15,5 @@ This is because we need to explicitly define the `action` inside the generated `
 # Usage  #
 
 ```
-./node_modules/.bin/ember-partial-codemod --inpu='../test/test.hbs' --ouput='../test.test.js'
+./node_modules/.bin/ember-partial-codemod --input='../test/test.hbs' --ouput='../test/test.js'
 ```
