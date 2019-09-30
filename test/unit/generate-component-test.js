@@ -9,7 +9,7 @@ const { generateComponent } = require('../../src/generate-component');
 describe('get-attribute', function() {
   it('generates correct component content', function(done) {
     const componentContent = generateComponent(Attributes);
-    const expectedComponentPath = path.resolve('./test/fixtures/attributes', 'component.js');
+    const expectedComponentPath = path.resolve('./test/fixtures/attributes', 'partial.js');
     const expectedComponentContent = fs.readFileSync(expectedComponentPath).toString();
     expect(componentContent).to.be.equal(expectedComponentContent);
 

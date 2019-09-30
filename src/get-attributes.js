@@ -77,6 +77,11 @@ function getAttributes(source) {
 
   traverse(ast, {
     BlockStatement(node) {
+      if (node.program && node.program.blockParams && node.program.blockParams.length > 0) {
+        // Exclude block params from being counted as a consuming attribute.
+        // e.g `bar` from {{#foo as |bar|}}{{/foo}}
+        node.program.blockParams.forEach(param => excludeAttributes.add(param));
+      }
       excludeAttributes.add(node.path.original);
     },
 
@@ -106,6 +111,10 @@ function getAttributes(source) {
     }
   });
 
+  /**
+   * Recursively extract all the `actions`.
+   * @param {Node} node
+   */
   function getActionsRecursive(node) {
     if (node.type === 'StringLiteral') {
       actions.add(node.value);

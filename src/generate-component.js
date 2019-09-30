@@ -11,7 +11,7 @@ function generateComponent({attributes, actions}) {
   documentation += `**/\n`;
 
   let componentCode = `export default Component.extend({\n`
-  if (actions) {
+  if (actions.length > 0) {
     let actionsCode = `\tactions: {\n`;
     actions.forEach(action => {
       actionsCode +=

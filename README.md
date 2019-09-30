@@ -110,8 +110,6 @@ We can explore possibilities to automate this as well.
 }}
 ```
 
-
-
 ## Explanation ##
 This codemod parses the template file using the [glimmerVM AST](https://github.com/glimmerjs/glimmer-vm).
 
@@ -126,8 +124,9 @@ As described in [Example](#Example), you can utilize the generated doc to find a
 
 ## Todo ##
 1. Make sure `get-attributes` is correct for all use cases.
-2. Find all the components that are consuming the current `partial` and convert them into the new `component` with the `attributes` passed in.
-3. Write some tests
+2. ~~Need to ignore attributes as part of closure~~
+3. Find all the components that are consuming the current `partial` and convert them into the new `component` with the `attributes` passed in.
+4. Write some tests
 
 ## Contribution ##
 Any contribution is appreciated!

@@ -20,4 +20,18 @@ describe('get-attribute', function() {
     expect(actionsMatch).to.be.true;
     done();
   });
+
+  it('ignores block params', function(done) {
+    const sourceDir = path.resolve('./test/fixtures/attributes', 'partial-with-block-params.hbs');
+    const source = fs.readFileSync(sourceDir).toString();
+
+    const attrs = getAttributes(source);
+
+    const attributesMatch = !attrs.attributes.some(attr => !expectedAttributes.attributes.includes(attr));
+    const actionsMatch = !attrs.actions.some(action => !expectedAttributes.actions.includes(action));
+
+    expect(attributesMatch).to.be.true;
+    expect(actionsMatch).to.be.true;
+    done();
+  });
 });

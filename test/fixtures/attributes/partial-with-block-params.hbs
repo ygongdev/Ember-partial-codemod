@@ -1,0 +1,10 @@
+{{#b1
+  attr=a1
+  action1=(action "action1")
+  as |doNotIncludebp1|
+}}
+{{doNotIncludebp1}}
+  {{#b2 attr=a2 as |doNotIncludebp2|}}
+    {{foo bar=doNotIncludebp2}}
+  {{/b2}}
+{{/b1}}
