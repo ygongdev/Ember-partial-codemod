@@ -1,6 +1,10 @@
+# ember-partial-codemod #
+
+[![npm version](https://badge.fury.io/js/ember-partial-codemod.svg)](https://badge.fury.io/js/ember-partial-codemod)
+[![Build Status](https://travis-ci.com/ygongdev/ember-partial-codemod.svg?branch=master)](https://travis-ci.com/ygongdev/ember-partial-codemod)
+
 **THIS IS AN EXPERIMENTAL WORK IN PROGRESS. USE AT YOUR OWN RISK**
 
-# ember-partial-codemod #
 Given a `partial`, this codemod will do the following:
 1. Transform the `<partial>.hbs` into a corresponding `component.hbs`. `component.js`.
 2. **[Feature Request]** Convert all `partial` usages into `component` usages.
