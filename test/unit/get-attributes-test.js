@@ -1,37 +1,95 @@
-'use strict';
+"use strict";
 
-const expect = require('chai').expect;
-const path = require('path');
-const fs = require('fs');
-const { getAttributes } = require('../../src/get-attributes');
-const expectedAttributes = require('../fixtures/attributes/attributes.json');
+const expect = require("chai").expect;
+const path = require("path");
+const fs = require("fs");
+const { getAttributes } = require("../../src/get-attributes");
+const expectedAttributes = require("../fixtures/attributes/attributes.json");
 
-describe('get-attribute', function() {
-  it('generates correct attributes and actions', function(done) {
-    const sourceDir = path.resolve('./test/fixtures/attributes', 'partial.hbs');
-    const source = fs.readFileSync(sourceDir).toString();
+describe("getAttribute", function() {
+  describe("Check correctness for only [attributes]", function() {
+    describe("contains", function() {
+      it("ElementNode with only MustacheStatement", function() {
+        const template = `<div class={{foo}}></div>`;
+        const attrs = getAttributes(template);
+        expect(attrs.partials).to.be.empty;
+        expect(attrs.attributes).to.deep.equal(["foo"]);
+        expect(attrs.actions).to.be.empty;
+      });
 
-    const attrs = getAttributes(source);
+      it("MustacheStatement with HashPair consist of dynamic value", function() {
+        const template = `{{foo bar=baz}}`;
+        const attrs = getAttributes(template);
+        expect(attrs.partials).to.be.empty;
+        expect(attrs.attributes).to.deep.equal(["baz"]);
+        expect(attrs.actions).to.be.empty;
+      });
 
-    const attributesMatch = !attrs.attributes.some(attr => !expectedAttributes.attributes.includes(attr));
-    const actionsMatch = !attrs.actions.some(action => !expectedAttributes.actions.includes(action));
+      it("MustacheStatement with dynamic Partial", function() {
+        const template = `{{partial foo}}`;
+        const attrs = getAttributes(template);
+        expect(attrs.partials).to.be.empty;
+        expect(attrs.attributes).to.deep.equal(["foo"]);
+        expect(attrs.actions).to.be.empty;
+      });
+    });
 
-    expect(attributesMatch).to.be.true;
-    expect(actionsMatch).to.be.true;
-    done();
+    describe("does not contain", function() {
+      it("MustacheStatement with HashPair consist of static stringLiteral", function() {
+        const template = `{{foo bar="baz"}}`;
+        const attrs = getAttributes(template);
+        expect(attrs.partials).to.be.empty;
+        expect(attrs.attributes).to.empty;
+        expect(attrs.actions).to.be.empty;
+      });
+    });
   });
 
-  it('ignores block params', function(done) {
-    const sourceDir = path.resolve('./test/fixtures/attributes', 'partial-with-block-params.hbs');
-    const source = fs.readFileSync(sourceDir).toString();
+  describe("Check correctness for only [actions]", function() {
+    it("MustacheStatement with HashPair consist of an action with string name", function() {
+      const template = `{{foo bar=(action "baz")}}`;
+      const attrs = getAttributes(template);
+      expect(attrs.partials).to.be.empty;
+      expect(attrs.attributes).to.be.empty;
+      expect(attrs.actions).to.deep.equal(["baz"]);
+    });
+  });
 
-    const attrs = getAttributes(source);
+  describe("Check correctness for only [partials]", function() {
+    it("MustacheStatement with static Partial", function() {
+      const template = `{{partial "foo"}}`;
+      const attrs = getAttributes(template);
+      expect(attrs.partials).to.deep.equal(["foo"]);
+      expect(attrs.attributes).to.be.empty;
+      expect(attrs.actions).to.be.empty;
+    });
+  });
 
-    const attributesMatch = !attrs.attributes.some(attr => !expectedAttributes.attributes.includes(attr));
-    const actionsMatch = !attrs.actions.some(action => !expectedAttributes.actions.includes(action));
+  describe("Check correctness for all", function() {
+    it("generates correct attributes and actions", function() {
+      const sourceDir = path.resolve("./test/fixtures/attributes", "partial.hbs");
+      const source = fs.readFileSync(sourceDir).toString();
 
-    expect(attributesMatch).to.be.true;
-    expect(actionsMatch).to.be.true;
-    done();
+      const attrs = getAttributes(source);
+
+      const attributesMatch = !attrs.attributes.some(attr => !expectedAttributes.attributes.includes(attr));
+      const actionsMatch = !attrs.actions.some(action => !expectedAttributes.actions.includes(action));
+
+      expect(attributesMatch).to.be.true;
+      expect(actionsMatch).to.be.true;
+    });
+
+    it("ignores block params", function() {
+      const sourceDir = path.resolve("./test/fixtures/attributes", "partial-with-block-params.hbs");
+      const source = fs.readFileSync(sourceDir).toString();
+
+      const attrs = getAttributes(source);
+
+      const attributesMatch = !attrs.attributes.some(attr => !expectedAttributes.attributes.includes(attr));
+      const actionsMatch = !attrs.actions.some(action => !expectedAttributes.actions.includes(action));
+
+      expect(attributesMatch).to.be.true;
+      expect(actionsMatch).to.be.true;
+    });
   });
 });

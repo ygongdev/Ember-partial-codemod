@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-const argv = require('yargs').argv;
-const fs = require('fs');
-const path = require('path');
-const { getAttributes } = require('../src/get-attributes');
-const { generateComponent } = require('../src/generate-component');
+const argv = require("yargs").argv;
+const fs = require("fs");
+const path = require("path");
+const { getAttributes } = require("../src/get-attributes");
+const { generateComponent } = require("../src/generate-component");
 
 function run() {
   let { input, output } = argv;
@@ -14,8 +14,8 @@ function run() {
   }
 
   if (input) {
-    if (input.substr(-4) !== '.hbs') {
-      console.error(`input file is not a Handlebars template.`);
+    if (input.substr(-4) !== ".hbs") {
+      console.error("input file is not a Handlebars template.");
       process.exit(1);
     }
     const inputPath = path.resolve(input);
@@ -24,14 +24,14 @@ function run() {
 
     let outputPath;
     if (output) {
-      if (output.substr(-3) !== '.js') {
-        console.error(`output file is not a Javascript file.`);
+      if (output.substr(-3) !== ".js") {
+        console.error("output file is not a Javascript file.");
         process.exit(1);
       }
       outputPath = path.resolve(output);
     } else {
-      outputPath = path.resolve(input.replace('.hbs', '.js'));
-      console.log(`No output defined, writing to "${outputPath}"...`)
+      outputPath = path.resolve(input.replace(".hbs", ".js"));
+      console.log(`No output defined, writing to "${outputPath}"...`);
     }
 
     fs.writeFileSync(outputPath, component);

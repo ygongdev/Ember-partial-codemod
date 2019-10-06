@@ -27,7 +27,7 @@
   HashPair: HashPair;
  */
 const { parse } = require("ember-template-recast");
-const { traverse, } = require('@glimmer/syntax');
+const { traverse, } = require("@glimmer/syntax");
 
 const EMBER_TEMPLATE_HELPERS = [
   "action",
@@ -74,6 +74,7 @@ function getAttributes(source) {
   const ast = parse(source);
   const excludeAttributes = new Set(EMBER_TEMPLATE_HELPERS);
   const actions = new Set();
+  const partials = new Set();
 
   traverse(ast, {
     BlockStatement(node) {
@@ -86,10 +87,21 @@ function getAttributes(source) {
     },
 
     MustacheStatement(node) {
-      if (node.path.original === 'action') {
-        // add string Literals, recursively.
+      // e.g foo={{action "..."}}
+      if (node.path.original === "action") {
+        // add string literals, recursively.
         getActionsRecursive(node);
         return;
+      }
+
+      // e.g {{partial ...}}
+      if (node.path.original === "partial") {
+        if (node.params && node.params.length > 0 && node.params[0].type === "StringLiteral") {
+          // Grab the first partial string
+          // e.g {{partial "string"}} <- add strin
+          partials.add(node.params[0].original);
+          return;
+        }
       }
 
       if ((node.hash && node.hash.pairs.length > 0) || (node.params && node.params.length > 0)) {
@@ -98,17 +110,18 @@ function getAttributes(source) {
     },
 
     HashPair(node) {
-      if (node.value.type === 'SubExpression' && node.value.path && node.value.path.original === 'action') {
+      // Search for any `actions` within the params.
+      if (node.value.type === "SubExpression" && node.value.path && node.value.path.original === "action") {
         getActionsRecursive(node.value);
       }
     },
 
     PathExpression(node) {
-      if (node.original === 'action') {
+      if (node.original === "action") {
         return;
       }
       attributes.add(node.original);
-    }
+    },
   });
 
   /**
@@ -116,7 +129,7 @@ function getAttributes(source) {
    * @param {Node} node
    */
   function getActionsRecursive(node) {
-    if (node.type === 'StringLiteral') {
+    if (node.type === "StringLiteral") {
       actions.add(node.value);
     }
     if (!node.path) {
@@ -124,7 +137,7 @@ function getAttributes(source) {
     }
     if (node.params && node.params.length > 0) {
       node.params.forEach(paramNode => {
-        getActionsRecursive(paramNode)
+        getActionsRecursive(paramNode);
       });
     }
   }
@@ -132,9 +145,10 @@ function getAttributes(source) {
   return {
     attributes: [...attributes].filter(attr => !excludeAttributes.has(attr)),
     actions: [...actions],
-  }
+    partials: [...partials],
+  };
 }
 
 module.exports = {
   getAttributes,
-}
+};
