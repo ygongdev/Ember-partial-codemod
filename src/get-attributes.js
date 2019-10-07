@@ -30,7 +30,7 @@ const { parse } = require("ember-template-recast");
 const { traverse, } = require("@glimmer/syntax");
 
 const EMBER_TEMPLATE_HELPERS = [
-  "action",
+  // "action",
   "array",
   "component",
   "concat",
@@ -52,7 +52,7 @@ const EMBER_TEMPLATE_HELPERS = [
   "mut",
   "on",
   "outlet",
-  "partial",
+  // "partial",
   "query-params",
   "textarea",
   "unbound",
@@ -98,7 +98,7 @@ function getAttributes(source) {
       if (node.path.original === "partial") {
         if (node.params && node.params.length > 0 && node.params[0].type === "StringLiteral") {
           // Grab the first partial string
-          // e.g {{partial "string"}} <- add strin
+          // e.g {{partial "string"}} <- add string
           partials.add(node.params[0].original);
           return;
         }
@@ -117,11 +117,24 @@ function getAttributes(source) {
     },
 
     PathExpression(node) {
+      // Don't add `action` and `partial` strings.
+      // e.g, {{action}}, {{partial}}
       if (node.original === "action") {
+        return;
+      }
+      if (node.original === "partial") {
         return;
       }
       attributes.add(node.original);
     },
+
+    // Search for `actions` that are subexpressions
+    // e.g, {{foo bar=(if baz (action "baz") (action "fizz"))}}
+    SubExpression(node) {
+      if (node.path.original === "action" && node.params && node.params.length > 0) {
+        getActionsRecursive(node);
+      }
+    }
   });
 
   /**
