@@ -20,7 +20,7 @@ const assert = require("assert");
  * )
  *
  */
-function getTemplateLocation(moduleName, { currentAddonPath, isApp = true }) {
+function getTemplateLocation(moduleName, { currentAddonPath, globConfig, isApp = true } = {}) {
   if (isApp) {
     const DELIMITERS = ["$", "::", "@"];
     let splitModuleNames;
@@ -53,12 +53,17 @@ function getTemplateLocation(moduleName, { currentAddonPath, isApp = true }) {
     // so `splitModuleNames` should never have length longer than 2...
     assert(splitModuleNames.length <= 2, "Something went wrong while splitting module name. Please check that your module name is correct");
 
-    const globPattern = `**/${splitModuleNames[0]}/**/${splitModuleNames[1]}.hbs`;
-    console.log(`Finding using the following glob pattern, ${globPattern}...`);
-    const templateLocations = glob.sync(globPattern, { absolute: true });
-
+    let globPattern = `**/${splitModuleNames[0]}/**/${splitModuleNames[1]}.hbs`;
+    // console.log(`Finding using the following glob pattern, ${globPattern}...`);
+    let templateLocations = glob.sync(globPattern, globConfig);
     // TODO: What to do if somehow we found more than one matching locations?
-    assert(templateLocations.length <= 1);
+    if (templateLocations.length <= 0) {
+      // Sometimes the previous glob is too defined, broaden the scope.
+      globPattern = `**/${splitModuleNames[1]}.hbs`;
+      // console.log(`Trying again using the another glob pattern, ${globPattern}...`);
+      templateLocations = glob.sync(globPattern, globConfig);
+    }
+    assert("Found multiple template locations", templateLocations.length <= 1);
     return templateLocations[0];
   }
 }

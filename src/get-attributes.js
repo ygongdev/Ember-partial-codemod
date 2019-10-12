@@ -125,7 +125,7 @@ function getAttributes(source) {
       if (node.original === "partial") {
         return;
       }
-      attributes.add(node.original);
+      attributes.add(node.parts[0]);
     },
 
     // Search for `actions` that are subexpressions

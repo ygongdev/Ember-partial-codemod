@@ -2,39 +2,30 @@
 const argv = require("yargs").argv;
 const fs = require("fs");
 const path = require("path");
-const { getAttributes } = require("../src/get-attributes");
-const { generateComponent } = require("../src/generate-component");
 
+// const { getAttributes } = require("../src/get-attributes");
+// const { generateComponent } = require("../src/generate-component");
+const { transformPartial } = require("../src/transform-partial");
+const { gatherPartialInfo } = require("../src/gather-partial-info");
+
+/**
+ * 1. Recast: go through each `partial parent`, and use  `partialModuleNameAttributeMap` to transform any `partials`.
+ * 2. TODO: Generate component `.js` file, if needed, e.g `actions`?
+ */
 function run() {
-  let { input, output } = argv;
+  const {
+    partialParentsPhysicalDiskPaths,
+    partialModuleNameAttributeMap
+  } = gatherPartialInfo();
 
-  if (!input) {
-    const args = process.argv.slice(2);
-    [input, output] = args;
-  }
+  for (let i = 0; i < partialParentsPhysicalDiskPaths.length; i++) {
+    const partialParent = partialParentsPhysicalDiskPaths[i];
 
-  if (input) {
-    if (input.substr(-4) !== ".hbs") {
-      console.error("input file is not a Handlebars template.");
-      process.exit(1);
+    const template = fs.readFileSync(partialParent).toString();
+    const newTemplate = transformPartial(template, partialModuleNameAttributeMap);
+    if (template !== newTemplate) {
+      fs.writeFileSync(partialParent, newTemplate);
     }
-    const inputPath = path.resolve(input);
-    const source = fs.readFileSync(inputPath).toString();
-    const component = generateComponent(getAttributes(source));
-
-    let outputPath;
-    if (output) {
-      if (output.substr(-3) !== ".js") {
-        console.error("output file is not a Javascript file.");
-        process.exit(1);
-      }
-      outputPath = path.resolve(output);
-    } else {
-      outputPath = path.resolve(input.replace(".hbs", ".js"));
-      console.log(`No output defined, writing to "${outputPath}"...`);
-    }
-
-    fs.writeFileSync(outputPath, component);
   }
 }
 
