@@ -1,87 +1,57 @@
-// "use strict";
+"use strict";
 
-// const execFile = require("child_process").execFile;
-// const expect = require("chai").expect;
-// const path = require("path");
-// const fs = require("fs");
+const execFile = require("child_process").execFile;
+const expect = require("chai").expect;
+const path = require("path");
+const fs = require("fs");
 
-// describe("ember-partial-codemod executable", function() {
-//   describe("given --input and --output", function() {
-//     it("should write component correctly", function(done) {
-//       const input = "templates/partial.hbs";
-//       const output = "components/partial.js";
-//       const actualOutput = "components/actual.js";
-//       const cwd = "./test/fixtures/with-input-and-output";
+describe("ember-partial-codemod executable", function() {
+  it("Finds and recast correctly using default transform" , function(done) {
+    const cwd = "./test/fixtures/ember-partial-codemod/";
+    const targetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/parent.hbs");
+    const contentBeforeTransform = fs.readFileSync(targetPath);
 
-//       execFile(
-//         "node",
-//         ["../../../bin/ember-partial-codemod.js", `--input=${input}`, `--output=${output}`],
-//         {
-//           cwd,
-//         },
-//         function(err, stdout, stderr) {
-//           const outputPath = path.resolve(cwd, output);
-//           const actualOutputPath = path.resolve(cwd, actualOutput);
+    execFile(
+      "node",
+      ["../../../bin/ember-partial-codemod.js"],
+      {
+        cwd,
+      },
+      function(err, stdout, stderr) {
+        const expectedContent = fs.readFileSync(path.resolve(cwd, "parent-after-transform.hbs"));
+        const contentAfterTransform = fs.readFileSync(targetPath);
 
-//           expect(outputPath, "output is created").to.be.not.empty;
-//           const outputContent = fs.readFileSync(outputPath);
-//           const actualOutputContent = fs.readFileSync(actualOutputPath);
+        expect(expectedContent.equals(contentAfterTransform)).to.be.true;
 
-//           expect(outputContent.equals(actualOutputContent)).to.be.true;
-//           // Remove newly created output file.
-//           fs.unlinkSync(outputPath);
+        // Revert the recast
+        fs.writeFileSync(targetPath, contentBeforeTransform);
+        done();
+      }
+    );
+  });
 
-//           expect(err).to.equal(null, "exits without error");
-//           expect(stdout).to.be.empty;
-//           expect(stderr).to.be.empty;
-//           done();
-//         }
-//       );
-//     });
+  it("Finds and recast correctly using a custom transform" , function(done) {
+    const cwd = "./test/fixtures/ember-partial-codemod/";
+    const customTransformPath = path.resolve(cwd, "custom-transform.js");
+    const targetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/parent.hbs");
+    const contentBeforeTransform = fs.readFileSync(targetPath);
 
-//     it("should throw error when --input is wrong", function(done) {
-//       const input = "templates/partial.txt";
-//       const output = "components/partial.js";
-//       const cwd = "./test/fixtures/with-input-and-output";
+    execFile(
+      "node",
+      ["../../../bin/ember-partial-codemod.js", `--transform=${customTransformPath}`],
+      {
+        cwd,
+      },
+      function(err, stdout, stderr) {
+        const expectedContent = fs.readFileSync(path.resolve(cwd, "parent-after-custom-transform.hbs"));
+        const contentAfterTransform = fs.readFileSync(targetPath);
 
-//       execFile(
-//         "node",
-//         ["../../../bin/ember-partial-codemod.js", `--input=${input}`, `--output=${output}`],
-//         {
-//           cwd,
-//         },
-//         function(err, stdout, stderr) {
-//           const outputPath = path.resolve(cwd, output);
-//           expect(fs.existsSync(outputPath, "output is not created")).to.be.not.true;
+        expect(expectedContent.equals(contentAfterTransform)).to.be.true;
 
-//           expect(err).to.be.not.empty;
-//           expect(stdout).to.be.empty;
-//           expect(stderr).to.equal("input file is not a Handlebars template.\n");
-//           done();
-//         }
-//       );
-//     });
-
-//     it("should throw error when --output is wrong", function(done) {
-//       const input = "templates/partial.hbs";
-//       const output = "components/partial.txt";
-//       const cwd = "./test/fixtures/with-input-and-output";
-//       execFile(
-//         "node",
-//         ["../../../bin/ember-partial-codemod.js", `--input=${input}`, `--output=${output}`],
-//         {
-//           cwd,
-//         },
-//         function(err, stdout, stderr) {
-//           const outputPath = path.resolve(cwd, output);
-//           expect(fs.existsSync(outputPath, "output is not created")).to.be.not.true;
-
-//           expect(err).to.be.not.empty;
-//           expect(stdout).to.be.empty;
-//           expect(stderr).to.equal("output file is not a Javascript file.\n");
-//           done();
-//         }
-//       );
-//     });
-//   });
-// });
+        // Revert the recast
+        fs.writeFileSync(targetPath, contentBeforeTransform);
+        done();
+      }
+    );
+  });
+});

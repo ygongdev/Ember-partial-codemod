@@ -13,6 +13,10 @@ const { gatherPartialInfo } = require("../src/gather-partial-info");
  * 2. TODO: Generate component `.js` file, if needed, e.g `actions`?
  */
 function run() {
+  const { transform: customTransform } = argv;
+
+  const transform = customTransform ? require(customTransform) : transformPartial;
+
   const {
     partialParentsPhysicalDiskPaths,
     partialModuleNameAttributeMap
@@ -22,7 +26,7 @@ function run() {
     const partialParent = partialParentsPhysicalDiskPaths[i];
 
     const template = fs.readFileSync(partialParent).toString();
-    const newTemplate = transformPartial(template, partialModuleNameAttributeMap);
+    const newTemplate = transform(template, partialModuleNameAttributeMap);
     if (template !== newTemplate) {
       fs.writeFileSync(partialParent, newTemplate);
     }
