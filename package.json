@@ -1,6 +1,6 @@
 {
   "name": "ember-partial-codemod",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Codemod to help you migrate away from partials",
   "homepage": "https://github.com/ygongdev/ember-partial-codemod",
   "bugs": {
@@ -20,8 +20,8 @@
     "recast": "ember-template-recast",
     "test": "mocha --require @babel/register **/*-test.js",
     "lint": "eslint .",
-    "release": "release-it",
-    "changelog": "auto-changelog -p"
+    "changelog": "auto-changelog -p",
+    "release": "release-it"
   },
   "devDependencies": {
     "@babel/cli": "^7.6.2",
