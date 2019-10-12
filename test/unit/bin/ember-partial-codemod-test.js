@@ -8,8 +8,11 @@ const fs = require("fs");
 describe("ember-partial-codemod executable", function() {
   it("Finds and recast correctly using default transform" , function(done) {
     const cwd = "./test/fixtures/ember-partial-codemod/";
-    const targetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/parent.hbs");
-    const contentBeforeTransform = fs.readFileSync(targetPath);
+    const parentTargetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/parent.hbs");
+    const childTargetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/partials/child.hbs");
+
+    const parentContentBeforeTransform = fs.readFileSync(parentTargetPath);
+    const childContentBeforeTransform = fs.readFileSync(childTargetPath);
 
     execFile(
       "node",
@@ -18,13 +21,18 @@ describe("ember-partial-codemod executable", function() {
         cwd,
       },
       function(err, stdout, stderr) {
-        const expectedContent = fs.readFileSync(path.resolve(cwd, "parent-after-transform.hbs"));
-        const contentAfterTransform = fs.readFileSync(targetPath);
+        const parentExpectedContent = fs.readFileSync(path.resolve(cwd, "parent-after-transform.hbs"));
+        const parentContentAfterTransform = fs.readFileSync(parentTargetPath);
+        const childExpectedContent = fs.readFileSync(path.resolve(cwd, "child-after-transform.hbs"));
+        const childContentAfterTransform = fs.readFileSync(childTargetPath);
 
-        expect(expectedContent.equals(contentAfterTransform)).to.be.true;
+        expect(parentExpectedContent.equals(parentContentAfterTransform)).to.be.true;
+        expect(childExpectedContent.equals(childContentAfterTransform)).to.be.true;
 
         // Revert the recast
-        fs.writeFileSync(targetPath, contentBeforeTransform);
+        fs.writeFileSync(parentTargetPath, parentContentBeforeTransform);
+        fs.writeFileSync(childTargetPath, childContentBeforeTransform);
+
         done();
       }
     );
@@ -33,8 +41,11 @@ describe("ember-partial-codemod executable", function() {
   it("Finds and recast correctly using a custom transform" , function(done) {
     const cwd = "./test/fixtures/ember-partial-codemod/";
     const customTransformPath = path.resolve(cwd, "custom-transform.js");
-    const targetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/parent.hbs");
-    const contentBeforeTransform = fs.readFileSync(targetPath);
+    const parentTargetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/parent.hbs");
+    const childTargetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/partials/child.hbs");
+
+    const parentContentBeforeTransform = fs.readFileSync(parentTargetPath);
+    const childContentBeforeTransform = fs.readFileSync(childTargetPath);
 
     execFile(
       "node",
@@ -43,13 +54,18 @@ describe("ember-partial-codemod executable", function() {
         cwd,
       },
       function(err, stdout, stderr) {
-        const expectedContent = fs.readFileSync(path.resolve(cwd, "parent-after-custom-transform.hbs"));
-        const contentAfterTransform = fs.readFileSync(targetPath);
+        const parentExpectedContent = fs.readFileSync(path.resolve(cwd, "parent-after-custom-transform.hbs"));
+        const parentContentAfterTransform = fs.readFileSync(parentTargetPath);
+        const childExpectedContent = fs.readFileSync(path.resolve(cwd, "child-after-custom-transform.hbs"));
+        const childContentAfterTransform = fs.readFileSync(childTargetPath);
 
-        expect(expectedContent.equals(contentAfterTransform)).to.be.true;
+        expect(parentExpectedContent.equals(parentContentAfterTransform)).to.be.true;
+        expect(childExpectedContent.equals(childContentAfterTransform)).to.be.true;
 
         // Revert the recast
-        fs.writeFileSync(targetPath, contentBeforeTransform);
+        fs.writeFileSync(parentTargetPath, parentContentBeforeTransform);
+        fs.writeFileSync(childTargetPath, childContentBeforeTransform);
+
         done();
       }
     );

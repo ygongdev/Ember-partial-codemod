@@ -17,9 +17,9 @@ function gatherPartialInfo({ globConfig } = { globConfig: { absolute: true }}) {
   // A mapping for path to attributes
   // e.g, { "foo/bar.hbs" : { attributes: ..., actions: ..., partials: ...}}
   const templateAttributeMap = {};
-  // A mapping for parent to an array of its consuming parents.
-  // e.g { "module partials" : "parent.hbs" }
-  const partialModuleNameToParentMap = {};
+  // A mapping for partial to an array of its consuming parents.
+  // e.g { "module partials" : ["parent.hbs"] }
+  const partialModuleNameToParentsMap = {};
   // e.g [ "foo/bar.hbs" ]
   const partialParentsPhysicalDiskPaths = [];
   // e.g { "module partial" : "foo/partial.hbs" }
@@ -30,7 +30,7 @@ function gatherPartialInfo({ globConfig } = { globConfig: { absolute: true }}) {
   /**
    * 1. Go through each `template` from `templateLocations`.
    * 2. Get the `attributes` from each `template`. Store this inside `templateAttributeMap`.
-   * 3. If the `template` has `partials`, add the `template` as a parent of the `partial` in `partialModuleNameToParentMap`.
+   * 3. If the `template` has `partials`, add the `template` as a parent of the `partial` in `partialModuleNameToParentsMap`.
    * 4. Generate a mapping of `partial module name` to `physical disk path` via `get-template-location`, since `partial` will be in module name.
    */
   templateLocations.forEach(location => {
@@ -39,17 +39,17 @@ function gatherPartialInfo({ globConfig } = { globConfig: { absolute: true }}) {
     if (attributes.partials && attributes.partials.length > 0) {
       partialParentsPhysicalDiskPaths.push(location);
       attributes.partials.forEach(partial => {
-        if (partial in partialModuleNameToParentMap) {
-          partialModuleNameToParentMap[partial].add(location);
+        if (partial in partialModuleNameToParentsMap) {
+          partialModuleNameToParentsMap[partial].add(location);
         } else {
-          partialModuleNameToParentMap[partial] = (new Set()).add(location);
+          partialModuleNameToParentsMap[partial] = (new Set()).add(location);
         }
       });
     }
   });
 
   let partialsFound = 0;
-  for (const partial in partialModuleNameToParentMap) {
+  for (const partial in partialModuleNameToParentsMap) {
     const partialPhyscialDiskPath = getTemplateLocation(partial, { globConfig });
     if (partialPhyscialDiskPath) {
       partialModuleNameToPhysicalDiskPath[partial] = partialPhyscialDiskPath;
@@ -59,7 +59,9 @@ function gatherPartialInfo({ globConfig } = { globConfig: { absolute: true }}) {
     }
   }
 
-  console.log(chalk.green(`Found template locations for ${partialsFound}/${Object.keys(partialModuleNameToParentMap).length} partials`));
+  console.log(chalk.green(`Found template locations for ${partialsFound}/${Object.keys(partialModuleNameToParentsMap).length} partials`));
+
+  _mergeNestedAttributes(templateAttributeMap, partialModuleNameToPhysicalDiskPath, partialModuleNameToParentsMap);
 
   for (const partial in partialModuleNameToPhysicalDiskPath) {
     for (let i = 0; i < templateLocations.length; i++) {
@@ -75,6 +77,30 @@ function gatherPartialInfo({ globConfig } = { globConfig: { absolute: true }}) {
     partialParentsPhysicalDiskPaths,
     partialModuleNameAttributeMap,
   };
+}
+
+/**
+ * Because `partials` can be nested, so we need to merge attributes.
+ *
+ * 1. Iterate through `partialModuleNameToPhysicalDiskPath`
+ * 2. If the its `physical disk path` is in `templateAttributeMap`
+ * 3. If the the `module` has parents, e.g  `module` in `partialModuleNameToParentsMap`
+ * 4. For each parent, merge the `module`, e.g the child's attributes into the `parents`
+ */
+function _mergeNestedAttributes(templateAttributeMap, partialModuleNameToPhysicalDiskPath, partialModuleNameToParentsMap) {
+  for (const partialModuleName in partialModuleNameToPhysicalDiskPath) {
+    const partialPhysicalDiskPath  = partialModuleNameToPhysicalDiskPath[partialModuleName];
+    const partialModuleParents = partialModuleNameToParentsMap[partialModuleName];
+    if (partialPhysicalDiskPath in templateAttributeMap && partialModuleParents && partialModuleParents.size > 0) {
+      partialModuleParents.forEach(parent => {
+        // Deep merge
+        childAttributes = templateAttributeMap[partialPhysicalDiskPath];
+        templateAttributeMap[parent].attributes = [...new Set([...templateAttributeMap[parent].attributes, ...childAttributes.attributes])];
+        templateAttributeMap[parent].actions = [...new Set([...templateAttributeMap[parent].actions, ...childAttributes.actions])];
+        templateAttributeMap[parent].partials = [...new Set([...templateAttributeMap[parent].partials, ...childAttributes.partials])];
+      });
+    }
+  }
 }
 
 module.exports = {

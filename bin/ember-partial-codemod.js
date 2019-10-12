@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 const argv = require("yargs").argv;
 const fs = require("fs");
-const path = require("path");
 
-// const { getAttributes } = require("../src/get-attributes");
-// const { generateComponent } = require("../src/generate-component");
 const { transformPartial } = require("../src/transform-partial");
 const { gatherPartialInfo } = require("../src/gather-partial-info");
 
