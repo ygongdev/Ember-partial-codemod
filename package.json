@@ -1,6 +1,6 @@
 {
   "name": "ember-partial-codemod",
-  "version": "0.1.4-1",
+  "version": "1.0.0",
   "description": "Codemod to help you migrate away from partials",
   "homepage": "https://github.com/ygongdev/ember-partial-codemod",
   "bugs": {
