@@ -20,7 +20,8 @@
     "recast": "ember-template-recast",
     "test": "mocha --require @babel/register **/*-test.js",
     "lint": "eslint .",
-    "release": "release-it"
+    "release": "release-it",
+    "changelog": "auto-changelog -p"
   },
   "devDependencies": {
     "@babel/cli": "^7.6.2",
