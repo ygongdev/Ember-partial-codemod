@@ -4,15 +4,25 @@ const execFile = require("child_process").execFile;
 const expect = require("chai").expect;
 const path = require("path");
 const fs = require("fs");
+const rimraf = require("rimraf");
 
 describe("ember-partial-codemod executable", function() {
   const cwd = "./test/fixtures/ember-partial-codemod/";
   const parentTargetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/parent.hbs");
   const childTargetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/partials/child.hbs");
   const expectedChildComponent = fs.readFileSync(path.resolve(cwd, "expected-child.js"));
+  const expectedNestedChildComponent = fs.readFileSync(path.resolve(cwd, "expected-nested-child.js"));
+  const newPartialComponentDir = "fake-base-dir/addon/components/partials/";
 
-  const parentContentBeforeTransform = fs.readFileSync(parentTargetPath);
-  const childContentBeforeTransform = fs.readFileSync(childTargetPath);
+  const parentTemplateBeforeTransform = fs.readFileSync(parentTargetPath);
+  const childTemplateBeforeTransform = fs.readFileSync(childTargetPath);
+
+  afterEach(function() {
+    // Revert the recast
+    fs.writeFileSync(parentTargetPath, parentTemplateBeforeTransform);
+    fs.writeFileSync(childTargetPath, childTemplateBeforeTransform);
+    rimraf.sync(path.resolve(cwd, newPartialComponentDir));
+  });
 
   it("Finds and recast correctly using default transform" , function(done) {
     execFile(
@@ -22,22 +32,20 @@ describe("ember-partial-codemod executable", function() {
         cwd,
       },
       function(err, stdout, stderr) {
-        const parentContentAfterTransform = fs.readFileSync(parentTargetPath);
-        const childContentAfterTransform = fs.readFileSync(childTargetPath);
+        const parentTemplateAfterTransform = fs.readFileSync(parentTargetPath);
+        const childTemplateAfterTransform = fs.readFileSync(childTargetPath);
         const childComponentTargetPath = path.resolve(cwd, "fake-base-dir/addon/components/partials/child.js");
         const childComponentAfterTransform = fs.readFileSync(childComponentTargetPath);
+        const nestedChildComponentTargetPath = path.resolve(cwd, "fake-base-dir/addon/components/partials/nested-child.js");
+        const nestedChildComponentAfterTransform = fs.readFileSync(nestedChildComponentTargetPath);
 
-        const expectedParentContent = fs.readFileSync(path.resolve(cwd, "parent-after-transform.hbs"));
-        const expectedChildContent = fs.readFileSync(path.resolve(cwd, "child-after-transform.hbs"));
+        const expectedParentTemplate = fs.readFileSync(path.resolve(cwd, "parent-after-transform.hbs"));
+        const expectedChildTemplate = fs.readFileSync(path.resolve(cwd, "child-after-transform.hbs"));
 
-        expect(expectedParentContent.equals(parentContentAfterTransform)).to.be.true;
-        expect(expectedChildContent.equals(childContentAfterTransform)).to.be.true;
+        expect(expectedParentTemplate.equals(parentTemplateAfterTransform)).to.be.true;
+        expect(expectedChildTemplate.equals(childTemplateAfterTransform)).to.be.true;
         expect(expectedChildComponent.equals(childComponentAfterTransform)).to.be.true;
-
-        // Revert the recast
-        fs.writeFileSync(parentTargetPath, parentContentBeforeTransform);
-        fs.writeFileSync(childTargetPath, childContentBeforeTransform);
-        fs.unlinkSync(childComponentTargetPath);
+        expect(expectedNestedChildComponent.equals(nestedChildComponentAfterTransform)).to.be.true;
 
         done();
       }
@@ -53,23 +61,21 @@ describe("ember-partial-codemod executable", function() {
         cwd,
       },
       function(err, stdout, stderr) {
-        const parentContentAfterTransform = fs.readFileSync(parentTargetPath);
-        const childContentAfterTransform = fs.readFileSync(childTargetPath);
+        const parentTemplateAfterTransform = fs.readFileSync(parentTargetPath);
+        const childTemplateAfterTransform = fs.readFileSync(childTargetPath);
         const childComponentTargetPath = path.resolve(cwd, "fake-base-dir/addon/components/partials/child.js");
         const childComponentAfterTransform = fs.readFileSync(childComponentTargetPath);
+        const nestedChildComponentTargetPath = path.resolve(cwd, "fake-base-dir/addon/components/partials/nested-child.js");
+        const nestedChildComponentAfterTransform = fs.readFileSync(nestedChildComponentTargetPath);
 
         const expectedChildComponent = fs.readFileSync(path.resolve(cwd, "expected-child.js"));
-        const expectedParentContent = fs.readFileSync(path.resolve(cwd, "parent-after-custom-transform.hbs"));
-        const expectedChildContent = fs.readFileSync(path.resolve(cwd, "child-after-custom-transform.hbs"));
+        const expectedParentTemplate = fs.readFileSync(path.resolve(cwd, "parent-after-custom-transform.hbs"));
+        const expectedChildTemplate = fs.readFileSync(path.resolve(cwd, "child-after-custom-transform.hbs"));
 
-        expect(expectedParentContent.equals(parentContentAfterTransform)).to.be.true;
-        expect(expectedChildContent.equals(childContentAfterTransform)).to.be.true;
+        expect(expectedParentTemplate.equals(parentTemplateAfterTransform)).to.be.true;
+        expect(expectedChildTemplate.equals(childTemplateAfterTransform)).to.be.true;
         expect(expectedChildComponent.equals(childComponentAfterTransform)).to.be.true;
-
-        // Revert the recast
-        fs.writeFileSync(parentTargetPath, parentContentBeforeTransform);
-        fs.writeFileSync(childTargetPath, childContentBeforeTransform);
-        fs.unlinkSync(childComponentTargetPath);
+        expect(expectedNestedChildComponent.equals(nestedChildComponentAfterTransform)).to.be.true;
 
         done();
       }
@@ -84,22 +90,20 @@ describe("ember-partial-codemod executable", function() {
         cwd,
       },
       function(err, stdout, stderr) {
-        const parentContentAfterTransform = fs.readFileSync(parentTargetPath);
-        const childContentAfterTransform = fs.readFileSync(childTargetPath);
+        const parentTemplateAfterTransform = fs.readFileSync(parentTargetPath);
+        const childTemplateAfterTransform = fs.readFileSync(childTargetPath);
         const childComponentTargetPath = path.resolve(cwd, "fake-base-dir/addon/components/partials/child.js");
         const childComponentAfterTransform = fs.readFileSync(childComponentTargetPath);
+        const nestedChildComponentTargetPath = path.resolve(cwd, "fake-base-dir/addon/components/partials/nested-child.js");
+        const nestedChildComponentAfterTransform = fs.readFileSync(nestedChildComponentTargetPath);
 
-        const expectedParentContent = fs.readFileSync(path.resolve(cwd, "parent-after-transform-with-replace-delimiter.hbs"));
-        const expectedChildContent = fs.readFileSync(path.resolve(cwd, "child-after-transform-with-replace-delimiter.hbs"));
+        const expectedParentTemplate = fs.readFileSync(path.resolve(cwd, "parent-after-transform-with-replace-delimiter.hbs"));
+        const expectedChildTemplate = fs.readFileSync(path.resolve(cwd, "child-after-transform-with-replace-delimiter.hbs"));
 
-        expect(expectedParentContent.equals(parentContentAfterTransform)).to.be.true;
-        expect(expectedChildContent.equals(childContentAfterTransform)).to.be.true;
+        expect(expectedParentTemplate.equals(parentTemplateAfterTransform)).to.be.true;
+        expect(expectedChildTemplate.equals(childTemplateAfterTransform)).to.be.true;
         expect(expectedChildComponent.equals(childComponentAfterTransform)).to.be.true;
-
-        // Revert the recast
-        fs.writeFileSync(parentTargetPath, parentContentBeforeTransform);
-        fs.writeFileSync(childTargetPath, childContentBeforeTransform);
-        fs.unlinkSync(childComponentTargetPath);
+        expect(expectedNestedChildComponent.equals(nestedChildComponentAfterTransform)).to.be.true;
 
         done();
       }
