@@ -3,7 +3,7 @@
 const expect = require("chai").expect;
 const path = require("path");
 const fs = require("fs");
-const { getAttributes } = require("../../src/get-attributes");
+const { getAttributes } = require("../../lib/get-attributes");
 const expectedAttributes = require("../fixtures/attributes/attributes.json");
 
 describe("getAttribute", function() {

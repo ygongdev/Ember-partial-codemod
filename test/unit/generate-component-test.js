@@ -4,7 +4,7 @@ const expect = require("chai").expect;
 const path = require("path");
 const fs = require("fs");
 const Attributes = require("../fixtures/attributes/attributes.json");
-const { generateComponent } = require("../../src/generate-component");
+const { generateComponent } = require("../../lib/generate-component");
 
 describe("generateComponent", function() {
   it("generates correct component content", function(done) {

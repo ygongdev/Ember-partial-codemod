@@ -25,7 +25,7 @@ function customPartialTransform(template, attributesMap) {
           const value = node.params[0].value;
           if (value in attributesMap) {
             const attributes = attributesMap[value];
-            console.log(chalk.green(`Recasting ${value}`));
+            console.info(chalk.green(`Recasting ${value}`));
             // Only difference is that we replace convert to sigil.
             return b.mustache(b.path(value.replace('@', '$').replace('::', '$')), [], b.hash(_buildHashPairs(attributes, b)));
           }

@@ -10,6 +10,7 @@
     "type": "git"
   },
   "bin": "./bin/ember-partial-codemod.js",
+  "main": "lib/index.js",
   "license": "MIT",
   "author": "Yicheng Gong",
   "dependencies": {

@@ -70,4 +70,36 @@ describe("ember-partial-codemod executable", function() {
       }
     );
   });
+
+  it("Finds and recast correctly using replaceDelimiter" , function(done) {
+    const cwd = "./test/fixtures/ember-partial-codemod/";
+    const parentTargetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/parent.hbs");
+    const childTargetPath = path.resolve(cwd, "fake-base-dir/addon/templates/components/partials/child.hbs");
+
+    const parentContentBeforeTransform = fs.readFileSync(parentTargetPath);
+    const childContentBeforeTransform = fs.readFileSync(childTargetPath);
+
+    execFile(
+      "node",
+      ["../../../bin/ember-partial-codemod.js", "--replaceDelimiter='$'"],
+      {
+        cwd,
+      },
+      function(err, stdout, stderr) {
+        const parentExpectedContent = fs.readFileSync(path.resolve(cwd, "parent-after-transform-with-replace-delimiter.hbs"));
+        const parentContentAfterTransform = fs.readFileSync(parentTargetPath);
+        const childExpectedContent = fs.readFileSync(path.resolve(cwd, "child-after-transform-with-replace-delimiter.hbs"));
+        const childContentAfterTransform = fs.readFileSync(childTargetPath);
+
+        expect(parentExpectedContent.equals(parentContentAfterTransform)).to.be.true;
+        expect(childExpectedContent.equals(childContentAfterTransform)).to.be.true;
+
+        // Revert the recast
+        fs.writeFileSync(parentTargetPath, parentContentBeforeTransform);
+        fs.writeFileSync(childTargetPath, childContentBeforeTransform);
+
+        done();
+      }
+    );
+  });
 });
