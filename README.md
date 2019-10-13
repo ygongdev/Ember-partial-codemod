@@ -3,10 +3,9 @@
 [![npm version](https://badge.fury.io/js/ember-partial-codemod.svg)](https://badge.fury.io/js/ember-partial-codemod)
 [![Build Status](https://travis-ci.com/ygongdev/ember-partial-codemod.svg?branch=master)](https://travis-ci.com/ygongdev/ember-partial-codemod)
 
-**THIS IS AN EXPERIMENTAL WORK IN PROGRESS. USE AT YOUR OWN RISK**
+**THIS IS AN EXPERIMENTAL WORK IN PROGRESS. USE AT YOUR OWN RISK. ISSUES ARE WELCOME**
 
-Given an `Ember` app or addon, this codemod will perform the following:
-1. Transform `partial` into `component` using data it gathers from the `partial`.
+Given an `Ember` app or addon, this codemod will transform all your `partials` into `components`.
 
 ## Table of Contents ##
 1. [Installation](#installation)
@@ -18,6 +17,12 @@ Given an `Ember` app or addon, this codemod will perform the following:
 
 ## Installation ##
 
+**Yarn**
+`yarn add ember-partial-codemod`
+
+**Npm**
+`npm install ember-partial-codemod`
+
 ## Usage ##
 
 ```
@@ -25,7 +30,69 @@ Given an `Ember` app or addon, this codemod will perform the following:
 ```
 
 ## Example
-TBA
+Given a folder structure like so
+```
+base
+└── addon
+    ├── components
+    └── templates
+        └── components
+            ├── parent.hbs
+            └── partials
+                ├── child.hbs
+                └── nested-child.hbs
+```
+
+### base/addon/templates/components/parent.hbs
+
+**Before**
+```javascript
+{{some-component attr=attr}}
+{{partial "fake-base-dir@partials/child"}}
+{{partial "fake-base-dir$partials/child"}}
+{{partial "fake-base-dir::partials/child"}}
+```
+
+**After**
+```javascript
+{{some-component attr=attr}}
+{{fake-base-dir@partials/child bar=bar baz=baz}}
+{{fake-base-dir$partials/child bar=bar baz=baz}}
+{{fake-base-dir::partials/child bar=bar baz=baz}}
+```
+
+### base/addon/templates/components/partials/child.hbs
+
+**Before**
+```javascript
+{{bar}}
+{{partial "fake-base-dir@partials/nested-child"}}
+{{partial "fake-base-dir$partials/nested-child"}}
+{{partial "fake-base-dir::partials/nested-child"}}
+```
+
+**After**
+```javascript
+{{bar}}
+{{fake-base-dir@partials/nested-child baz=baz}}
+{{fake-base-dir$partials/nested-child baz=baz}}
+{{fake-base-dir::partials/nested-child baz=baz}}
+```
+
+### base/addon/templates/components/partials/nested-child.hbs
+
+**Before**
+```javascript
+{{baz}}
+```
+
+**After**
+```javascript
+{{baz}}
+```
+
+
+
 
 ## Explanation ##
 This codemod parses the template file using the [glimmerVM AST](https://github.com/glimmerjs/glimmer-vm).
@@ -44,7 +111,6 @@ The codemod is broken into two major phases.
 1. Make sure `get-attributes` is correct for all use cases.
 2. Optimize Phase 1.
 3. Handle `actions` in a better way.
-4. Handle nested `partials`, e.g `A -> B -> C...`, where `A`,`B`,`C` are all `partials`.
 4. Write tests.
 
 ## Contribution ##
