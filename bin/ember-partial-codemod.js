@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const argv = require("yargs").argv;
+const yargs = require("yargs");
 const fs = require("fs");
 
 const { transformPartial } = require("../lib/transform-partial");
@@ -10,8 +10,18 @@ const { gatherPartialInfo } = require("../lib/gather-partial-info");
  * 2. TODO: Generate component `.js` file, if needed, e.g `actions`?
  */
 function run() {
+  const argv = yargs
+    .alias("v", "verbose")
+    .alias("t", "transform")
+    .boolean("verbose")
+    .choices("replaceDelimiter", ["$", "::", "@"])
+    .argv;
   const { transform: customTransform, replaceDelimiter, verbose } = argv;
-  console.info(verbose);
+
+  if (!verbose) {
+    console.info = () => {};
+  }
+
   const transform = customTransform ? require(customTransform) : transformPartial;
 
   const {
