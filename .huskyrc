@@ -2,6 +2,5 @@
   "hooks": {
     "pre-commit": "yarn lint && yarn test",
     "pre-push": "yarn lint && yarn test",
-    "after:bump": "yarn changelog"
   }
 }
