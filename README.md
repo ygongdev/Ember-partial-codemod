@@ -105,7 +105,7 @@ Nothing changed!
 
 Note that in our example, we have `actions`!
 The codemod will handle this by creating a new `.js` file for the component and intelligently infer its location to write to. This way the actions are properly passed to the new `component`.
-So for our example, the codemod will generate the following structure. 
+So for our example, the codemod will generate the following structure.
 ```
 base
 └── addon

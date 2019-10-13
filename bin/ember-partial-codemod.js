@@ -22,6 +22,11 @@ function run() {
         description: "Display useful information while running codemod",
         type: "boolean"
       },
+      customCwd: {
+        alias: "cwd",
+        description: "Setting the cwd for searching",
+        type: "string",
+      },
       transform: {
         alias: "t",
         description: "Custom transform module for recasting",
@@ -38,10 +43,9 @@ function run() {
         type: "string"
       }
     })
-    .boolean("verbose")
     .choices("replace-delimiter", ["$", "::", "@"])
     .argv;
-  const { transform: customTransform, replaceDelimiter, verbose, componentReplaceRegex } = argv;
+  const { transform: customTransform, replaceDelimiter, verbose, customCwd, componentReplaceRegex } = argv;
 
   if (!verbose) {
     console.info = () => {};
@@ -49,12 +53,18 @@ function run() {
 
   const transform = customTransform ? require(customTransform) : transformPartial;
 
+  const globConfig = {};
+  globConfig.absolute = true;
+  if (customCwd) {
+    globConfig.cwd = customCwd;
+  }
+
   const {
     templateAttributeMap,
     partialParentsPhysicalDiskPaths,
     partialModuleNameAttributeMap,
     partialModuleNameToPhysicalDiskPath,
-  } = gatherPartialInfo();
+  } = gatherPartialInfo({ globConfig });
 
   /**
    * Recasting and builindg components

@@ -34,9 +34,6 @@ jobs:
       name: floating dependencies
       install: yarn install --no-lockfile --ignore-engines
 
-    - name: "Node 6"
-      node_js: "6"
-
     - name: "Node 8"
       node_js: "8"
 
