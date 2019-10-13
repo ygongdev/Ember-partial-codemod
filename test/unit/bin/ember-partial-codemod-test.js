@@ -4,7 +4,6 @@ const execFile = require("child_process").execFile;
 const expect = require("chai").expect;
 const path = require("path");
 const fs = require("fs");
-const rimraf = require("rimraf");
 
 describe("ember-partial-codemod executable", function() {
   const cwd = "./test/fixtures/ember-partial-codemod/";
@@ -17,11 +16,11 @@ describe("ember-partial-codemod executable", function() {
   const parentTemplateBeforeTransform = fs.readFileSync(parentTargetPath);
   const childTemplateBeforeTransform = fs.readFileSync(childTargetPath);
 
-  afterEach(function() {
+  afterEach(function(done) {
     // Revert the recast
     fs.writeFileSync(parentTargetPath, parentTemplateBeforeTransform);
     fs.writeFileSync(childTargetPath, childTemplateBeforeTransform);
-    rimraf.sync(path.resolve(cwd, newPartialComponentDir));
+    execFile("rm", ["-rf", newPartialComponentDir], { cwd }, () => done());
   });
 
   it("Finds and recast correctly using default transform" , function(done) {
