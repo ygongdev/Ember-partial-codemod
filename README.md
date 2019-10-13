@@ -18,10 +18,14 @@ Given an `Ember` app or addon, this codemod will transform all your `partials` i
 ## Installation ##
 
 **Yarn**
-`yarn add ember-partial-codemod`
+```
+yarn add ember-partial-codemod
+```
 
 **Npm**
-`npm install ember-partial-codemod`
+```
+npm install ember-partial-codemod
+```
 
 ## Usage ##
 
@@ -35,6 +39,7 @@ Given a folder structure like so
 base
 └── addon
     ├── components
+    │   ├── parent.js
     └── templates
         └── components
             ├── parent.hbs
@@ -48,17 +53,17 @@ base
 **Before**
 ```javascript
 {{some-component attr=attr}}
-{{partial "fake-base-dir@partials/child"}}
-{{partial "fake-base-dir$partials/child"}}
-{{partial "fake-base-dir::partials/child"}}
+{{partial "base@partials/child"}}
+{{partial "base$partials/child"}}
+{{partial "base::partials/child"}}
 ```
 
 **After**
 ```javascript
 {{some-component attr=attr}}
-{{fake-base-dir@partials/child bar=bar baz=baz}}
-{{fake-base-dir$partials/child bar=bar baz=baz}}
-{{fake-base-dir::partials/child bar=bar baz=baz}}
+{{base@partials/child bar=bar baz=baz actionName=(action "actionName")}}
+{{base$partials/child bar=bar baz=baz actionName=(action "actionName")}}
+{{base::partials/child bar=bar baz=baz actionName=(action "actionName")}}
 ```
 
 ### base/addon/templates/components/partials/child.hbs
@@ -66,17 +71,17 @@ base
 **Before**
 ```javascript
 {{bar}}
-{{partial "fake-base-dir@partials/nested-child"}}
-{{partial "fake-base-dir$partials/nested-child"}}
-{{partial "fake-base-dir::partials/nested-child"}}
+{{partial "base@partials/nested-child" actionName=(action "actionName")}}
+{{partial "base$partials/nested-child" actionName=(action "actionName")}}
+{{partial "base::partials/nested-child" actionName=(action "actionName")}}
 ```
 
 **After**
 ```javascript
 {{bar}}
-{{fake-base-dir@partials/nested-child baz=baz}}
-{{fake-base-dir$partials/nested-child baz=baz}}
-{{fake-base-dir::partials/nested-child baz=baz}}
+{{base@partials/nested-child baz=baz actionName=(action "actionName")}}
+{{base$partials/nested-child baz=baz actionName=(action "actionName")}}
+{{base::partials/nested-child baz=baz actionName=(action "actionName")}}
 ```
 
 ### base/addon/templates/components/partials/nested-child.hbs
@@ -91,8 +96,37 @@ base
 {{baz}}
 ```
 
+Note that in our example, we have `actions`!
+The codemod will handle this by creating a new `.js` file for the component and intelligently infer its location to write to. This way the actions are properly passed to the new `component`.
+So for our example, we will create the following structure and a file, `base/addon/components/partials/child.js`
+```
+base
+└── addon
+    ├── components
+    │   ├── parent.js
+    │   └── partials <- new folder
+    │       └── child.js <- new file!
+    └── templates
+        └── components
+            ├── parent.hbs
+            └── partials
+                ├── child.hbs
+                └── nested-child.hbs
+```
 
+### base/addon/templates/components/partials/nested-child.hbs
+```javascript
+import Component from '@ember/component';
+import { tryInvoke } from '@ember/utils';
 
+export default Component.extend({
+	actions: {
+		actionName() {
+			tryInvoke(this, 'actionName');
+		},
+	}
+});
+```
 
 ## Explanation ##
 This codemod parses the template file using the [glimmerVM AST](https://github.com/glimmerjs/glimmer-vm).
