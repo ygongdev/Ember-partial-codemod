@@ -1,5 +1,8 @@
 const chalk = require("chalk");
 const { transform } = require("ember-template-recast");
+const DELIMITERS = [
+  "@", "$", "::"
+]
 
 function _buildHashPairs(attrs, b) {
   const pairs = [];
@@ -17,7 +20,8 @@ function _buildHashPairs(attrs, b) {
   return pairs;
 }
 
-function customPartialTransform(template, attributesMap) {
+function customPartialTransform(template, attributesMap, { replaceDelimiter = false } = {}) {
+  let attributes = {};
   const { code } = transform(template, env => {
     let { builders: b } = env.syntax;
 
@@ -26,16 +30,25 @@ function customPartialTransform(template, attributesMap) {
         if (node.path.original === "partial" && node.params && node.params.length > 0  && node.params[0].type === "StringLiteral") {
           const value = node.params[0].value;
           if (value in attributesMap) {
-            const attributes = attributesMap[value];
+            let moduleName = value;
+            attributes = attributesMap[value];
             console.info(chalk.green(`Recasting ${value}`));
-            // Only difference is that we replace convert to sigil.
+            if (replaceDelimiter) {
+              DELIMITERS.forEach(delim =>
+                moduleName = moduleName.replace(delim, replaceDelimiter)
+              );
+            }
             return b.mustache(b.path(value.replace('@', '$').replace('::', '$')), [], b.hash(_buildHashPairs(attributes, b)));
           }
         }
       },
     };
   });
-  return code;
+
+  return {
+    code,
+    attributes
+  };
 }
 
 module.exports = customPartialTransform;
