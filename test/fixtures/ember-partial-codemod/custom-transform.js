@@ -12,9 +12,9 @@ function _buildHashPairs(attrs, b) {
     pairs.push(b.pair(attr, b.path(attr)));
   });
 
-  // Builds actionName=(action "actionName")
-  attrs.actions.forEach(actionName => {
-    pairs.push(b.pair(actionName, b.sexpr(b.path("action"), [b.literal("StringLiteral", actionName)])));
+  // Builds action2=(action "action2")
+  attrs.actions.forEach(action2 => {
+    pairs.push(b.pair(action2, b.sexpr(b.path("action"), [b.literal("StringLiteral", action2)])));
   });
 
   return pairs;

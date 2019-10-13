@@ -61,9 +61,9 @@ base
 **After**
 ```javascript
 {{some-component attr=attr}}
-{{base@partials/child bar=bar baz=baz actionName=(action "actionName")}}
-{{base$partials/child bar=bar baz=baz actionName=(action "actionName")}}
-{{base::partials/child bar=bar baz=baz actionName=(action "actionName")}}
+{{base@partials/child bar=bar baz=baz action2=(action "action2")}}
+{{base$partials/child bar=bar baz=baz action2=(action "action2")}}
+{{base::partials/child bar=bar baz=baz action2=(action "action2")}}
 ```
 
 ### base/addon/templates/components/partials/child.hbs
@@ -71,17 +71,17 @@ base
 **Before**
 ```javascript
 {{bar}}
-{{partial "base@partials/nested-child" actionName=(action "actionName")}}
-{{partial "base$partials/nested-child" actionName=(action "actionName")}}
-{{partial "base::partials/nested-child" actionName=(action "actionName")}}
+{{partial "base@partials/nested-child"}}
+{{partial "base$partials/nested-child"}}
+{{partial "base::partials/nested-child"}}
 ```
 
 **After**
 ```javascript
 {{bar}}
-{{base@partials/nested-child baz=baz actionName=(action "actionName")}}
-{{base$partials/nested-child baz=baz actionName=(action "actionName")}}
-{{base::partials/nested-child baz=baz actionName=(action "actionName")}}
+{{base@partials/nested-child baz=baz action2=(action "action2")}}
+{{base$partials/nested-child baz=baz action2=(action "action2")}}
+{{base::partials/nested-child baz=baz action2=(action "action2")}}
 ```
 
 ### base/addon/templates/components/partials/nested-child.hbs
@@ -89,16 +89,23 @@ base
 **Before**
 ```javascript
 {{baz}}
+{{fizz
+  action1=(action "action2")
+}}
 ```
 
 **After**
+Nothing changed!
 ```javascript
 {{baz}}
+{{fizz
+  action1=(action "action2")
+}}
 ```
 
 Note that in our example, we have `actions`!
 The codemod will handle this by creating a new `.js` file for the component and intelligently infer its location to write to. This way the actions are properly passed to the new `component`.
-So for our example, we will create the following structure and a file, `base/addon/components/partials/child.js`
+So for our example, the codemod will generate the following structure. 
 ```
 base
 └── addon
@@ -106,12 +113,30 @@ base
     │   ├── parent.js
     │   └── partials <- new folder
     │       └── child.js <- new file!
+    │       └── nested-child.js <- new file!
     └── templates
         └── components
             ├── parent.hbs
             └── partials
                 ├── child.hbs
                 └── nested-child.hbs
+```
+
+Notice how we have two new files now, `base/addon/components/partials/child.js` and `base/addon/components/partials/nested-child.js`.
+They are both generated because we lost the `parent.js` scope, so actions will not be discovered anymore. Therefore, we faciliate the ability for `actions` to be passed down correctly by generating the associated `.js` files, so the actions are discoverable again.
+
+### base/addon/templates/components/partials/child.hbs
+```javascript
+import Component from '@ember/component';
+import { tryInvoke } from '@ember/utils';
+
+export default Component.extend({
+	actions: {
+		action2() {
+			tryInvoke(this, 'action2');
+		},
+	}
+});
 ```
 
 ### base/addon/templates/components/partials/nested-child.hbs
@@ -121,8 +146,8 @@ import { tryInvoke } from '@ember/utils';
 
 export default Component.extend({
 	actions: {
-		actionName() {
-			tryInvoke(this, 'actionName');
+		action2() {
+			tryInvoke(this, 'action2');
 		},
 	}
 });

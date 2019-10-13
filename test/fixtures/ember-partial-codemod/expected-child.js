@@ -3,8 +3,8 @@ import { tryInvoke } from '@ember/utils';
 
 export default Component.extend({
 	actions: {
-		actionName() {
-			tryInvoke(this, 'actionName');
+		action2() {
+			tryInvoke(this, 'action2');
 		},
 	}
 });
