@@ -30,6 +30,7 @@
     "@babel/node": "^7.6.2",
     "@babel/preset-env": "^7.6.2",
     "@babel/register": "^7.6.2",
+    "auto-changelog": "^1.16.1",
     "babel-core": "^7.0.0-bridge.0",
     "babel-register": "^6.26.0",
     "chai": "^4.2.0",
