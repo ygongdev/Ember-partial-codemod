@@ -4,12 +4,14 @@ const { transform } = require("ember-template-recast");
 function _buildHashPairs(attrs, b) {
   const pairs = [];
 
+  // Builds attr=attr
   attrs.attributes.forEach(attr => {
     pairs.push(b.pair(attr, b.path(attr)));
   });
 
-  attrs.actions.forEach(action => {
-    pairs.push(b.pair(action, b.path(action)));
+  // Builds actionName=(action "actionName")
+  attrs.actions.forEach(actionName => {
+    pairs.push(b.pair(actionName, b.sexpr(b.path("action"), [b.literal("StringLiteral", actionName)])));
   });
 
   return pairs;
