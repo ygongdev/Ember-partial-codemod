@@ -78,7 +78,7 @@ function run() {
     const template = fs.readFileSync(partialParentsPhysicalDiskPath).toString();
     const { code: newTemplate, attributes: attrs } = transform(template, partialModuleNameAttributeMap, { replaceDelimiter });
     if (newTemplate && (template !== newTemplate)) {
-      let componentPhysicalDiskPath = partialParentsPhysicalDiskPath;
+      let componentPhysicalDiskPath = partialParentsPhysicalDiskPath.replace(".hbs", ".js");
       if (componentReplaceRegex) {
         componentPhysicalDiskPath = componentPhysicalDiskPath.replace(componentReplaceRegex);
       } else if (componentPhysicalDiskPath.includes("/components/")) {
@@ -89,7 +89,7 @@ function run() {
       const component = generateComponent(attrs);
       // If the component file does not exist and we need to create one, we create one.
       if (!fs.existsSync(componentPhysicalDiskPath) && component) {
-        fse.outputFileSync(componentPhysicalDiskPath.replace(".hbs", ".js"), component);
+        fse.outputFileSync(componentPhysicalDiskPath, component);
       }
       fs.writeFileSync(partialParentsPhysicalDiskPath, newTemplate);
     }

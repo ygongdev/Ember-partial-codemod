@@ -49,6 +49,22 @@ describe("getAttribute", function() {
     });
 
     describe("does not contain", function() {
+      it("MustacheStatement with only module name (variant 1)", function() {
+        const template = `{{foo$bar}}`;
+        const attrs = getAttributes(template);
+        expect(attrs.partials).to.be.empty;
+        expect(attrs.attributes).to.empty;
+        expect(attrs.actions).to.be.empty;
+      });
+
+      it("MustacheStatement with only module name (variant 2)", function() {
+        const template = `{{foo/bar}}`;
+        const attrs = getAttributes(template);
+        expect(attrs.partials).to.be.empty;
+        expect(attrs.attributes).to.empty;
+        expect(attrs.actions).to.be.empty;
+      });
+
       it("MustacheStatement with HashPair consist of static stringLiteral", function() {
         const template = `{{foo bar="baz"}}`;
         const attrs = getAttributes(template);
