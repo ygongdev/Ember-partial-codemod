@@ -6,6 +6,7 @@ const fse = require("fs-extra");
 const { transformPartial } = require("../lib/transform-partial");
 const { gatherPartialInfo } = require("../lib/gather-partial-info");
 const { generateComponent } = require("../lib/generate-component");
+const { getAttributes } = require("../lib/get-attributes");
 const DELIMITERS = require("../lib/constant/delimiters");
 
 /**
@@ -17,6 +18,15 @@ function run() {
     .help("help")
     .alias("h", "help")
     .options({
+      attr: {
+        description: "Gets the attribute of an file",
+        type: "string",
+      },
+      patterns: {
+        alias: "pat",
+        description: "Expand specific directories while globbing",
+        type: "array",
+      },
       verbose: {
         alias: "verb",
         description: "Display useful information while running codemod",
@@ -45,10 +55,16 @@ function run() {
     })
     .choices("replace-delimiter", ["$", "::", "@"])
     .argv;
-  const { transform: customTransform, replaceDelimiter, verbose, customCwd, componentReplaceRegex } = argv;
-
+  const { transform: customTransform, replaceDelimiter, verbose, customCwd, componentReplaceRegex, attr, patterns } = argv;
+    console.log(argv);
   if (!verbose) {
     console.info = () => {};
+  }
+
+  if (attr) {
+    const attributes = getAttributes(fs.readFileSync(attr).toString());
+    console.log(attributes);
+    return;
   }
 
   const transform = customTransform ? require(customTransform) : transformPartial;
@@ -58,13 +74,14 @@ function run() {
   if (customCwd) {
     globConfig.cwd = customCwd;
   }
+  globConfig.expandDirectories = true;
 
   const {
     templateAttributeMap,
     partialParentsPhysicalDiskPaths,
     partialModuleNameAttributeMap,
     partialModuleNameToPhysicalDiskPath,
-  } = gatherPartialInfo({ globConfig });
+  } = gatherPartialInfo(patterns, { globConfig });
 
   /**
    * Recasting and builindg components
