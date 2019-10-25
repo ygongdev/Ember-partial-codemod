@@ -42,28 +42,28 @@ function run() {
         description: "Custom transform module for recasting",
         type: "string"
       },
-      componentReplaceRegex: {
-        alias: "crr",
-        description: "Regex to convert template to component path",
-        type: "string"
-      },
       replaceDelimiter: {
         alias: "rd",
         description: `Replace module name [${DELIMITERS}] while recasting`,
         type: "string"
+      },
+      replace: {
+        alias: "r",
+        description: "Replace certain names in template and component paths. 2 params",
+        type: "array"
       }
     })
     .choices("replace-delimiter", ["$", "::", "@"])
     .argv;
-  const { transform: customTransform, replaceDelimiter, verbose, customCwd, componentReplaceRegex, attr, patterns } = argv;
-    console.log(argv);
+  const { transform: customTransform, replaceDelimiter, verbose, customCwd,  attr, patterns, replace } = argv;
+
   if (!verbose) {
     console.info = () => {};
   }
 
   if (attr) {
     const attributes = getAttributes(fs.readFileSync(attr).toString());
-    console.log(attributes);
+    console.info(attributes);
     return;
   }
 
@@ -83,6 +83,7 @@ function run() {
     partialModuleNameToPhysicalDiskPath,
   } = gatherPartialInfo(patterns, { globConfig });
 
+  const partialModulesUsed = new Set();
   /**
    * Recasting and builindg components
    * 1. Iterate through all parents of partials
@@ -93,12 +94,15 @@ function run() {
     const partialParentsPhysicalDiskPath = partialParentsPhysicalDiskPaths[i];
 
     const template = fs.readFileSync(partialParentsPhysicalDiskPath).toString();
-    const { code: newTemplate, attributes: attrs } = transform(template, partialModuleNameAttributeMap, { replaceDelimiter });
+    const { code: newTemplate, attributes: attrs } = transform(template, partialModuleNameAttributeMap, partialModulesUsed, { replace, replaceDelimiter });
     if (newTemplate && (template !== newTemplate)) {
       let componentPhysicalDiskPath = partialParentsPhysicalDiskPath.replace(".hbs", ".js");
-      if (componentReplaceRegex) {
-        componentPhysicalDiskPath = componentPhysicalDiskPath.replace(componentReplaceRegex);
-      } else if (componentPhysicalDiskPath.includes("/components/")) {
+
+      if (replace) {
+        componentPhysicalDiskPath = componentPhysicalDiskPath.replace(replace[0], replace[1]);
+      }
+
+      if (componentPhysicalDiskPath.includes("/components/")) {
         componentPhysicalDiskPath = componentPhysicalDiskPath.replace("/templates/", "/");
       } else {
         componentPhysicalDiskPath = componentPhysicalDiskPath.replace("/templates/", "/components/");
@@ -108,7 +112,17 @@ function run() {
       if (!fs.existsSync(componentPhysicalDiskPath) && component) {
         fse.outputFileSync(componentPhysicalDiskPath, component);
       }
-      fs.writeFileSync(partialParentsPhysicalDiskPath, newTemplate);
+      fse.outputFileSync(partialParentsPhysicalDiskPath, newTemplate);
+
+      if (replace && partialParentsPhysicalDiskPath.includes(replace[0])) {
+        console.info(`Moving partials: ${partialParentsPhysicalDiskPath}`);
+        // If the path does not contain /components we replace /templates/ into /templates/components/
+        let newPath = partialParentsPhysicalDiskPath.replace(replace[0], replace[1]);
+        if (!partialParentsPhysicalDiskPath.includes("/components/")) {
+          newPath = newPath.replace("/templates/", "/templates/components/");
+        }
+        fse.moveSync(partialParentsPhysicalDiskPath, newPath);
+      }
     }
   }
 
@@ -130,16 +144,37 @@ function run() {
       const component = generateComponent(attrs);
       if (component) {
         let componentPhysicalDiskPath = partialComponentPhysicalDiskPath;
-        if (componentReplaceRegex) {
-          componentPhysicalDiskPath = componentPhysicalDiskPath.replace(componentReplaceRegex);
-        } else if (componentPhysicalDiskPath.includes("/components/")) {
+
+        if (replace) {
+          componentPhysicalDiskPath = componentPhysicalDiskPath.replace(replace[0], replace[1]);
+        }
+
+        if (componentPhysicalDiskPath.includes("/components/")) {
           componentPhysicalDiskPath = componentPhysicalDiskPath.replace("/templates/", "/");
         } else {
           componentPhysicalDiskPath = componentPhysicalDiskPath.replace("/templates/", "/components/");
         }
 
         fse.outputFileSync(componentPhysicalDiskPath, component);
+        if (replace && componentPhysicalDiskPath.includes(replace[0])) {
+          console.info(`Moving component js: ${componentPhysicalDiskPath}`);
+          fse.moveSync(componentPhysicalDiskPath, componentPhysicalDiskPath.replace(replace[0], replace[1]));
+        }
       }
+    }
+  });
+
+  partialModulesUsed.forEach(usedModule => {
+    const physicalDiskPath = partialModuleNameToPhysicalDiskPath[usedModule];
+
+    if (physicalDiskPath && fse.existsSync(physicalDiskPath) && replace && physicalDiskPath.includes(replace[0])) {
+      console.info(`Moving leaf partials: ${physicalDiskPath}`);
+      let newPath = physicalDiskPath.replace(replace[0], replace[1]);
+      // If the path does not contain /components we replace /templates/ into /templates/components/
+      if (!physicalDiskPath.includes("/components/")) {
+        newPath = newPath.replace("/templates/", "/templates/components/");
+      }
+      fse.moveSync(physicalDiskPath, newPath);
     }
   });
 }
