@@ -3,9 +3,8 @@ const yargs = require("yargs");
 const fs = require("fs");
 const fse = require("fs-extra");
 
-const { transformPartial } = require("../lib/transform-partial");
+const { transformPartial, transformPartialTemplate } = require("../lib/transform-partial");
 const { gatherPartialInfo } = require("../lib/gather-partial-info");
-const { generateComponent } = require("../lib/generate-component");
 const { getAttributes } = require("../lib/get-attributes");
 const DELIMITERS = require("../lib/constant/delimiters");
 
@@ -55,7 +54,8 @@ function run() {
     })
     .choices("replace-delimiter", ["$", "::", "@"])
     .argv;
-  const { transform: customTransform, replaceDelimiter, verbose, customCwd,  attr, patterns, replace } = argv;
+  let { transform: customTransform, replaceDelimiter, verbose, customCwd,  attr, patterns, replace } = argv;
+  replaceDelimiter = replaceDelimiter ? replaceDelimiter : "$";
 
   if (!verbose) {
     console.info = () => {};
@@ -75,9 +75,9 @@ function run() {
     globConfig.cwd = customCwd;
   }
   globConfig.expandDirectories = true;
+  globConfig.gitignore = true;
 
   const {
-    templateAttributeMap,
     partialParentsPhysicalDiskPaths,
     partialModuleNameAttributeMap,
     partialModuleNameToPhysicalDiskPath,
@@ -85,10 +85,9 @@ function run() {
 
   const partialModulesUsed = new Set();
   /**
-   * Recasting and builindg components
+   * Recasting and building components
    * 1. Iterate through all parents of partials
    * 2. Recast if a new template is generated
-   * 3. Generate component if attributes exist
    */
   for (let i = 0; i < partialParentsPhysicalDiskPaths.length; i++) {
     const partialParentsPhysicalDiskPath = partialParentsPhysicalDiskPaths[i];
@@ -96,22 +95,7 @@ function run() {
     const template = fs.readFileSync(partialParentsPhysicalDiskPath).toString();
     const { code: newTemplate, attributes: attrs } = transform(template, partialModuleNameAttributeMap, partialModulesUsed, { replace, replaceDelimiter });
     if (newTemplate && (template !== newTemplate)) {
-      let componentPhysicalDiskPath = partialParentsPhysicalDiskPath.replace(".hbs", ".js");
 
-      if (replace) {
-        componentPhysicalDiskPath = componentPhysicalDiskPath.replace(replace[0], replace[1]);
-      }
-
-      if (componentPhysicalDiskPath.includes("/components/")) {
-        componentPhysicalDiskPath = componentPhysicalDiskPath.replace("/templates/", "/");
-      } else {
-        componentPhysicalDiskPath = componentPhysicalDiskPath.replace("/templates/", "/components/");
-      }
-      const component = generateComponent(attrs);
-      // If the component file does not exist and we need to create one, we create one.
-      if (!fs.existsSync(componentPhysicalDiskPath) && component) {
-        fse.outputFileSync(componentPhysicalDiskPath, component);
-      }
       fse.outputFileSync(partialParentsPhysicalDiskPath, newTemplate);
 
       if (replace && partialParentsPhysicalDiskPath.includes(replace[0])) {
@@ -126,54 +110,28 @@ function run() {
     }
   }
 
-  /**
-   * There are cases where we also need to generate component for the LEAF partial itself, so the action gets registered. e.g
-   * <button... action1=(action "action2")...>
-   * We need to do this because up until this point, we have done it for all the PARENTS and if the LEAF template is a partial,
-   * it most likely didn't have an associated component .js file once we remove it from the parent scope.
-   *
-   * Steps
-   * 1. Iterate through `partialModuleNameToPhysicalDiskPath`'s physical disk path
-   * 2. If component path, not the template path, does not exist, generate one since parent components have being generated already.
-   * 3. This guarantees that we are creating it for the LEAF partials.
-   */
-  Object.values(partialModuleNameToPhysicalDiskPath).forEach(partialTemplatePhysicalDiskPath => {
-    const partialComponentPhysicalDiskPath = partialTemplatePhysicalDiskPath.replace(".hbs", ".js");
-    if (!fs.existsSync(partialComponentPhysicalDiskPath)) {
-      const attrs = templateAttributeMap[partialTemplatePhysicalDiskPath];
-      const component = generateComponent(attrs);
-      if (component) {
-        let componentPhysicalDiskPath = partialComponentPhysicalDiskPath;
-
-        if (replace) {
-          componentPhysicalDiskPath = componentPhysicalDiskPath.replace(replace[0], replace[1]);
-        }
-
-        if (componentPhysicalDiskPath.includes("/components/")) {
-          componentPhysicalDiskPath = componentPhysicalDiskPath.replace("/templates/", "/");
-        } else {
-          componentPhysicalDiskPath = componentPhysicalDiskPath.replace("/templates/", "/components/");
-        }
-
-        fse.outputFileSync(componentPhysicalDiskPath, component);
-        if (replace && componentPhysicalDiskPath.includes(replace[0])) {
-          console.info(`Moving component js: ${componentPhysicalDiskPath}`);
-          fse.moveSync(componentPhysicalDiskPath, componentPhysicalDiskPath.replace(replace[0], replace[1]));
-        }
-      }
-    }
-  });
-
   partialModulesUsed.forEach(usedModule => {
     const physicalDiskPath = partialModuleNameToPhysicalDiskPath[usedModule];
 
-    if (physicalDiskPath && fse.existsSync(physicalDiskPath) && replace && physicalDiskPath.includes(replace[0])) {
-      console.info(`Moving leaf partials: ${physicalDiskPath}`);
-      let newPath = physicalDiskPath.replace(replace[0], replace[1]);
+    if (physicalDiskPath && fse.existsSync(physicalDiskPath)) {
+      const template = fs.readFileSync(partialModuleNameToPhysicalDiskPath[usedModule]).toString();
+      const { code: newTemplate } = transformPartialTemplate(template);
+      if (newTemplate && (template !== newTemplate)) {
+        console.info(`Recasting partial template: ${physicalDiskPath}`);
+        fse.outputFileSync(physicalDiskPath, newTemplate);
+      }
+
+      let newPath = physicalDiskPath;
+
+      if (replace && physicalDiskPath.includes(replace[0])) {
+        newPath = newPath.replace(replace[0], replace[1]);
+      }
       // If the path does not contain /components we replace /templates/ into /templates/components/
       if (!physicalDiskPath.includes("/components/")) {
         newPath = newPath.replace("/templates/", "/templates/components/");
       }
+      console.info(`Moving leaf partials: ${physicalDiskPath} to ${newPath}`);
+
       fse.moveSync(physicalDiskPath, newPath);
     }
   });

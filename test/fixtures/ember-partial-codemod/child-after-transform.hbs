@@ -1,4 +1,4 @@
 {{bar}}
-{{fake-base-dir@partials/nested-child baz=baz action2=(action "action2")}}
-{{fake-base-dir$partials/nested-child baz=baz action2=(action "action2")}}
-{{fake-base-dir::partials/nested-child baz=baz action2=(action "action2")}}
+{{fake-base-dir$partials/nested-child baz=baz action2=(action (global-helpers$optional action2))}}
+{{fake-base-dir$partials/nested-child baz=baz action2=(action (global-helpers$optional action2))}}
+{{fake-base-dir$partials/nested-child baz=baz action2=(action (global-helpers$optional action2))}}
