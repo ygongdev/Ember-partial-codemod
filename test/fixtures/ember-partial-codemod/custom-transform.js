@@ -7,6 +7,9 @@ const DELIMITERS = [
 function _buildHashPairs(attrs, b) {
   const pairs = [];
 
+  // Turn the component into a truly tagless template
+  pairs.push(b.pair("tagName", b.literal("StringLiteral", "")));
+
   // Builds attr=attr
   attrs.attributes.forEach(attr => {
     pairs.push(b.pair(attr, b.path(attr)));
